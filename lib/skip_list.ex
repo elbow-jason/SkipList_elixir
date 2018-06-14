@@ -5,6 +5,7 @@ defmodule SkipList do
   alias SkipList.Node
   alias SkipList.List
   require Logger
+  require Integer
 
   # 最大层数限制
   @max_level 10
@@ -183,7 +184,8 @@ defmodule SkipList do
       {:ok, list} ->
         list
         |> Enum.map(fn x -> x.value end)
-        |> IO.inspect()
+	|> Enum.reduce("", fn x, acc -> acc <> " => "<> Integer.to_string(x)  end)
+        |> IO.inspect(label: "level: #{level}")
 
         printSL(lmap, level - 1)
     end
