@@ -8,6 +8,11 @@ defmodule SkipList do
 
   # 最大层数限制
   @max_level 10
+  @type nde :: term
+  @type lst :: %List{
+          top_level: non_neg_integer,
+          list_map: %{non_neg_integer => [term]}
+        }
 
   @doc """
   创建跳跃表, level较高的在前面 
