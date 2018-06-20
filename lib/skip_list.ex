@@ -1,6 +1,6 @@
 defmodule SkipList do
   @moduledoc """
-  跳跃表的elixir实现
+  skiplist implementation in elixir
   """
   alias SkipList.Node
   alias SkipList.List
@@ -9,16 +9,35 @@ defmodule SkipList do
 
   # 最大层数限制
   @max_level 10
-  @type nde :: term
-  @type lst :: %List{
-          top_level: non_neg_integer,
-          list_map: %{non_neg_integer => [term]}
+
+  @type nde :: %Node{
+          key: any,
+          value: any
         }
+  @type t :: %List{
+          top_level: non_neg_integer,
+          list_map: %{non_neg_integer => [nde]}
+        }
+  @type argt :: [nde] | none
 
   @doc """
-  创建跳跃表, level较高的在前面 
+  create a new skip list
+  ## Example
+
+  iex> SkipList.new([%SkipList.Node{key: 1, value: 2}])
+  %SkipList.List{
+    list_map: %{0 => [%SkipList.Node{key: 1, value: 2}]},
+    top_level: 0
+  }
+
   """
-  def new_sl(),
+  @spec new(argt) :: __MODULE__.t()
+  def new(list) do
+    reduce_func = fn %Node{key: key, value: value}, acc -> insert(acc, key, value) end
+    list |> Enum.reduce(new(), reduce_func)
+  end
+
+  def new(),
     do: %List{
       top_level: 0,
       list_map: %{0 => []}
@@ -184,16 +203,10 @@ defmodule SkipList do
       {:ok, list} ->
         list
         |> Enum.map(fn x -> x.value end)
-	|> Enum.reduce("", fn x, acc -> acc <> " => "<> Integer.to_string(x)  end)
+        |> Enum.reduce("", fn x, acc -> acc <> " => " <> Integer.to_string(x) end)
         |> IO.inspect(label: "level: #{level}")
 
         printSL(lmap, level - 1)
     end
   end
-
-  # def demo() do
-  #   0..18
-  #   |> Enum.reduce(new_sl(), fn x, acc -> insert(acc, x, x * x) end)
-  #   |> printSL()
-  # end
 end

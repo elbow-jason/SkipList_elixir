@@ -9,7 +9,9 @@ defmodule SkipListTest do
   test "skip list search" do
     sl =
       0..18
-      |> Enum.reduce(SkipList.new_sl(), fn x, acc -> SkipList.insert(acc, x, x * x) end)
+      |> Enum.map(fn x -> %SkipList.Node{key: x, value: x * x} end)
+      |> SkipList.new()
+
     expect = 18 * 18
     assert SkipList.search(sl, 18).value == expect
   end
