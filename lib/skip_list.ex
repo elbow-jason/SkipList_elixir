@@ -22,14 +22,7 @@ defmodule SkipList do
 
   @doc """
   create a new skip list
-  ## Example
-
-  iex> SkipList.new([%SkipList.Node{key: 1, value: 2}])
-  %SkipList.List{
-    list_map: %{0 => [%SkipList.Node{key: 1, value: 2}]},
-    top_level: 0
-  }
-
+  cause the top level is random, doctest is not possible
   """
   @spec new(argt) :: __MODULE__.t()
   def new(list) do
@@ -44,8 +37,9 @@ defmodule SkipList do
     }
 
   @doc """
-  生成一个层
+  Generate a random hight level when a new element was inserted
   """
+  @spec random_level() :: non_neg_integer
   def random_level() do
     r = rlevel(0)
 
@@ -56,40 +50,28 @@ defmodule SkipList do
   end
 
   defp rlevel(acc) do
-    r = Enum.random(1..2)
-
-    case r do
+    # coin tossing
+    case Enum.random(1..2) do
       1 -> acc
       2 -> rlevel(acc + 1)
-    end
-  end
-
-  def search_pos([], _key), do: :error
-
-  def search_pos([h | t], key) do
-    cond do
-      h.key < key -> search_pos(t, key)
-      h.key == key -> {:ok, h}
-      :else -> :error
     end
   end
 
   defp insert_into_list(sl, level, key, value) do
     case Map.fetch(sl.list_map, level) do
       :error ->
-        # 空level
+        # empty level, create a new level
         %List{
           top_level: sl.top_level + 1,
           list_map: Map.put(sl.list_map, level, [%Node{key: key, value: value}])
         }
 
       {:ok, list} ->
-        # 更新
+        # update level, add node to tail, and sort it
+        # T: O(N), not good, need optimizing
         nlist =
           [%Node{key: key, value: value} | list]
           |> Enum.sort_by(fn x -> x.key end)
-
-        # |> Enum.uniq_by(fn %Node{key: k, value: _} -> k end)
 
         %List{
           top_level: sl.top_level,
@@ -104,8 +86,11 @@ defmodule SkipList do
         raise "level not exists"
 
       {:ok, list} ->
-        nlist = df_list(list, key, [])
+        # delete key from list
+        # nlist = df_list(list, key, [])
+        nlist = list |> Enum.filter(fn x -> x.key != key end)
 
+	# if (key, value) is the last item in list, rebuild the skiplist
         case length(nlist) do
           0 ->
             if level == sl.top_level do
@@ -135,16 +120,16 @@ defmodule SkipList do
     end
   end
 
-  defp df_list([h | t], key, acc) do
-    cond do
-      h.key < key -> df_list(t, key, [h | acc])
-      h.key == key -> Enum.reverse(t) ++ acc
-      :else -> Enum.reverse([h | t]) ++ acc
-    end
-  end
+  # defp df_list([h | t], key, acc) do
+  #   cond do
+  #     h.key < key -> df_list(t, key, [h | acc])
+  #     h.key == key -> Enum.reverse(t) ++ acc
+  #     :else -> Enum.reverse([h | t]) ++ acc
+  #   end
+  # end
 
   @doc """
-  从表中插入一个元素
+  insert a element into skiplist
   """
   def insert(sl, key, value) do
     # 重复的不能插入
@@ -158,7 +143,7 @@ defmodule SkipList do
   end
 
   @doc """
-  查询
+  search element in a skiplist, if element not in skiplist, return nil
   """
   def search(sl, key), do: search(sl.list_map, key, sl.top_level)
   defp search(_, _, -1), do: nil
@@ -169,9 +154,11 @@ defmodule SkipList do
         raise "level not exists"
 
       {:ok, list} ->
-        case search_pos(list, key) do
-          :error -> search(lmap, key, level - 1)
-          {:ok, value} -> value
+        v = Enum.find(list, fn x -> x.key == key end)
+
+        case v do
+          nil -> search(lmap, key, level - 1)
+          _ -> v
         end
     end
   end
@@ -179,7 +166,7 @@ defmodule SkipList do
   def exists?(sl, key), do: search(sl, key) != nil
 
   @doc """
-  从表中删除一个元素
+  delete an element from skiplist
   """
   def delete(sl, key) do
     if not exists?(sl, key) do
