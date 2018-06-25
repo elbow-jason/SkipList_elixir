@@ -120,17 +120,10 @@ defmodule SkipList do
     end
   end
 
-  # defp df_list([h | t], key, acc) do
-  #   cond do
-  #     h.key < key -> df_list(t, key, [h | acc])
-  #     h.key == key -> Enum.reverse(t) ++ acc
-  #     :else -> Enum.reverse([h | t]) ++ acc
-  #   end
-  # end
-
   @doc """
   insert a element into skiplist
   """
+  @spec insert(__MODULE__.t, any, any) :: __MODULE__.t
   def insert(sl, key, value) do
     # 重复的不能插入
     if exists?(sl, key) do
@@ -163,11 +156,16 @@ defmodule SkipList do
     end
   end
 
+  @doc """
+  check if key exists in skiplist
+  """
+  @spec exists?(__MODULE__.t, any) :: boolean()
   def exists?(sl, key), do: search(sl, key) != nil
 
   @doc """
   delete an element from skiplist
   """
+  @spec delete(__MODULE__.t, any) :: __MODULE__.t
   def delete(sl, key) do
     if not exists?(sl, key) do
       :error
@@ -178,6 +176,9 @@ defmodule SkipList do
     |> Enum.reduce(sl, fn x, acc -> delete_from_list(acc, x, key) end)
   end
 
+  @doc """
+  pretty print the skip list
+  """
   def printSL(sl), do: printSL(sl.list_map, sl.top_level)
 
   defp printSL(_lmap, -1), do: IO.puts("end")
